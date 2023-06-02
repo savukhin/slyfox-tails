@@ -33,7 +33,7 @@ func newStage(db *gorm.DB, opts ...gen.DOOption) stage {
 	_stage.JobID = field.NewUint64(tableName, "job_id")
 	_stage.CreatedAt = field.NewTime(tableName, "created_at")
 	_stage.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_stage.DeletedAt = field.NewField(tableName, "deleted_attt")
+	_stage.DeletedAt = field.NewField(tableName, "deleted_at")
 	_stage.Points = stageManyToManyPoints{
 		db: db.Session(&gorm.Session{}),
 
@@ -92,7 +92,7 @@ func (s *stage) updateTableName(table string) *stage {
 	s.JobID = field.NewUint64(table, "job_id")
 	s.CreatedAt = field.NewTime(table, "created_at")
 	s.UpdatedAt = field.NewTime(table, "updated_at")
-	s.DeletedAt = field.NewField(table, "deleted_attt")
+	s.DeletedAt = field.NewField(table, "deleted_at")
 
 	s.fillFieldMap()
 
@@ -116,7 +116,7 @@ func (s *stage) fillFieldMap() {
 	s.fieldMap["job_id"] = s.JobID
 	s.fieldMap["created_at"] = s.CreatedAt
 	s.fieldMap["updated_at"] = s.UpdatedAt
-	s.fieldMap["deleted_attt"] = s.DeletedAt
+	s.fieldMap["deleted_at"] = s.DeletedAt
 
 }
 

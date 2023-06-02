@@ -32,7 +32,7 @@ func newProject(db *gorm.DB, opts ...gen.DOOption) project {
 	_project.CreatorID = field.NewUint64(tableName, "creator_id")
 	_project.CreatedAt = field.NewTime(tableName, "created_at")
 	_project.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_project.DeletedAt = field.NewField(tableName, "deleted_attt")
+	_project.DeletedAt = field.NewField(tableName, "deleted_at")
 	_project.Jobs = projectHasManyJobs{
 		db: db.Session(&gorm.Session{}),
 
@@ -100,7 +100,7 @@ func (p *project) updateTableName(table string) *project {
 	p.CreatorID = field.NewUint64(table, "creator_id")
 	p.CreatedAt = field.NewTime(table, "created_at")
 	p.UpdatedAt = field.NewTime(table, "updated_at")
-	p.DeletedAt = field.NewField(table, "deleted_attt")
+	p.DeletedAt = field.NewField(table, "deleted_at")
 
 	p.fillFieldMap()
 
@@ -123,7 +123,7 @@ func (p *project) fillFieldMap() {
 	p.fieldMap["creator_id"] = p.CreatorID
 	p.fieldMap["created_at"] = p.CreatedAt
 	p.fieldMap["updated_at"] = p.UpdatedAt
-	p.fieldMap["deleted_attt"] = p.DeletedAt
+	p.fieldMap["deleted_at"] = p.DeletedAt
 
 }
 
