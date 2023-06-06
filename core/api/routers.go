@@ -4,14 +4,19 @@ import (
 	"crypto/rsa"
 	"fmt"
 
+	"github.com/go-playground/validator/v10"
+	"github.com/go-redis/redis"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
-func SetupRouter(db *gorm.DB, privateKey *rsa.PrivateKey) *fiber.App {
+func SetupRouter(db *gorm.DB, redisClient *redis.Client, privateKey *rsa.PrivateKey, logger *zap.Logger) *fiber.App {
 	app := fiber.New()
+
+	validate := validator.New()
 
 	// app.Use(cors.New(cors.Config{
 	// 	AllowOrigins: "*",
@@ -32,8 +37,9 @@ func SetupRouter(db *gorm.DB, privateKey *rsa.PrivateKey) *fiber.App {
 		},
 	})
 
-	v1.Post("/login", login(db, privateKey))
-	v1.Post("/register", NotImplemented)
+	v1.Post("/login", login(db, privateKey, validate))
+	v1.Post("/register", register(db, redisClient, logger, validate))
+	v1.Post("/email-verify/:code", verify(db, redisClient, logger))
 
 	v1.Get("/restricted", jwtMiddleware, func(c *fiber.Ctx) error {
 		fmt.Println(c.Locals("user"))

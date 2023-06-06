@@ -29,7 +29,9 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user.ALL = field.NewAsterisk(tableName)
 	_user.ID = field.NewInt(tableName, "id")
 	_user.Username = field.NewString(tableName, "username")
+	_user.PasswordHash = field.NewString(tableName, "password_hash")
 	_user.Email = field.NewString(tableName, "email")
+	_user.EmailVerified = field.NewBool(tableName, "email_verified")
 	_user.CreatedAt = field.NewTime(tableName, "created_at")
 	_user.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_user.DeletedAt = field.NewField(tableName, "deleted_at")
@@ -79,14 +81,16 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 type user struct {
 	userDo
 
-	ALL       field.Asterisk
-	ID        field.Int
-	Username  field.String
-	Email     field.String
-	CreatedAt field.Time
-	UpdatedAt field.Time
-	DeletedAt field.Field
-	Points    userHasManyPoints
+	ALL           field.Asterisk
+	ID            field.Int
+	Username      field.String
+	PasswordHash  field.String
+	Email         field.String
+	EmailVerified field.Bool
+	CreatedAt     field.Time
+	UpdatedAt     field.Time
+	DeletedAt     field.Field
+	Points        userHasManyPoints
 
 	Projects userHasManyProjects
 
@@ -107,7 +111,9 @@ func (u *user) updateTableName(table string) *user {
 	u.ALL = field.NewAsterisk(table)
 	u.ID = field.NewInt(table, "id")
 	u.Username = field.NewString(table, "username")
+	u.PasswordHash = field.NewString(table, "password_hash")
 	u.Email = field.NewString(table, "email")
+	u.EmailVerified = field.NewBool(table, "email_verified")
 	u.CreatedAt = field.NewTime(table, "created_at")
 	u.UpdatedAt = field.NewTime(table, "updated_at")
 	u.DeletedAt = field.NewField(table, "deleted_at")
@@ -127,10 +133,12 @@ func (u *user) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (u *user) fillFieldMap() {
-	u.fieldMap = make(map[string]field.Expr, 8)
+	u.fieldMap = make(map[string]field.Expr, 10)
 	u.fieldMap["id"] = u.ID
 	u.fieldMap["username"] = u.Username
+	u.fieldMap["password_hash"] = u.PasswordHash
 	u.fieldMap["email"] = u.Email
+	u.fieldMap["email_verified"] = u.EmailVerified
 	u.fieldMap["created_at"] = u.CreatedAt
 	u.fieldMap["updated_at"] = u.UpdatedAt
 	u.fieldMap["deleted_at"] = u.DeletedAt

@@ -3,4 +3,5 @@ go 1.19
 use (
 	./core
 	./core/db/gorm_gen
+	./core/tests
 )
