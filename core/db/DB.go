@@ -2,23 +2,45 @@ package db
 
 import (
 	"fmt"
-	"slyfox-tails/utils"
+	"slyfox-tails/config"
+	"slyfox-tails/db/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-func ConnectDatabase() (*gorm.DB, error) {
-	host := utils.GetEnvDefault("POSTGRES_HOST", "localhost")
-	user := utils.GetEnvDefault("POSTGRES_USER", "20624880")
-	password := utils.GetEnvDefault("POSTGRES_PASSWORD", "admin")
-	db := utils.GetEnvDefault("POSTGRES_DB", "slyfox-tails")
-	port := utils.GetEnvDefault("POSTGRES_PORT", "5432")
+func autoMigrate(gormdb *gorm.DB) error {
+	migrateModels := []interface{}{
+		models.User{},
+		models.Project{},
+		models.Job{},
+		models.Stage{},
+		models.Point{},
+	}
 
+	return gormdb.AutoMigrate(migrateModels...)
+}
+
+func ConnectDatabase(cfg *config.Config) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
-		host, user, password, db, port,
+		cfg.PostgresHost, cfg.PostgresUser,
+		cfg.PostgresPassword, cfg.PostgresDB,
+		cfg.PostgresPort,
 	)
 
 	postgresConn := postgres.Open(dsn)
-	return gorm.Open(postgresConn)
+	gormDB, err := gorm.Open(postgresConn)
+
+	if err != nil {
+		return gormDB, err
+	}
+
+	if cfg.PostgresAutoMigrate {
+		err := autoMigrate(gormDB)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return gormDB, nil
 }

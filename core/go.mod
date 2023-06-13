@@ -8,6 +8,7 @@ require (
 	github.com/gofiber/contrib/jwt v1.0.0
 	github.com/gofiber/fiber/v2 v2.46.0
 	github.com/golang-jwt/jwt/v5 v5.0.0
+	github.com/kelseyhightower/envconfig v1.4.0
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.8.0
 	gorm.io/driver/postgres v1.5.2

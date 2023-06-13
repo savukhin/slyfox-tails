@@ -5,34 +5,32 @@ import (
 	"crypto/rsa"
 	"log"
 	"slyfox-tails/api"
+	"slyfox-tails/config"
 	"slyfox-tails/db"
-	"slyfox-tails/utils"
 
+	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
 )
 
-const (
-	releaseMode string = "release"
-	debugMode   string = "debug"
-	testMode    string = "release"
-)
-
 func main() {
-	MODE := utils.GetEnvDefault("MODE", "release")
-	PORT := utils.GetEnvDefault("PORT", ":8080")
+	cfg := &config.Config{}
+	err := envconfig.Process("", cfg)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
-	gormDB, err := db.ConnectDatabase()
+	gormDB, err := db.ConnectDatabase(cfg)
 	if err != nil {
 		panic(err)
 	}
 
-	redisClient, err := db.ConnectRedis()
+	redisClient, err := db.ConnectRedis(cfg)
 	if err != nil {
 		panic(err)
 	}
 
 	var logger *zap.Logger
-	if MODE == "release" {
+	if cfg.Mode == config.ReleaseMode {
 		logger, err = zap.NewProduction()
 	} else {
 		logger, err = zap.NewDevelopment()
@@ -51,7 +49,7 @@ func main() {
 		log.Fatalf("rsa.GenerateKey: %v", err)
 	}
 
-	app := api.SetupRouter(gormDB, redisClient, privateKey, logger)
+	app := api.SetupRouter(gormDB, redisClient, privateKey, logger, cfg)
 
-	app.Listen(PORT)
+	app.Listen(cfg.Port)
 }

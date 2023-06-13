@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
+	"slyfox-tails/config"
 	"slyfox-tails/db/models"
 	"slyfox-tails/db/query"
 	"strconv"
@@ -37,16 +38,14 @@ func login(db *gorm.DB, privateKey *rsa.PrivateKey, validate *validator.Validate
 		}
 
 		u := query.Use(db).User
-		users, err := u.
+		user, err := u.
 			Where(u.Username.Eq(payload.Username), u.EmailVerified.Is(true)).
-			Find()
+			First()
 
 		// Throws Unauthorized error
-		if err != nil || len(users) != 1 {
+		if err != nil {
 			return c.SendStatus(fiber.StatusUnauthorized)
 		}
-
-		user := users[0]
 
 		if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(payload.Password)); err != nil {
 			return c.SendStatus(fiber.StatusUnauthorized)
@@ -54,7 +53,7 @@ func login(db *gorm.DB, privateKey *rsa.PrivateKey, validate *validator.Validate
 
 		// Create the Claims
 		claims := jwt.MapClaims{
-			"name":  user.Username,
+			"id":    user.ID,
 			"admin": true,
 			"exp":   time.Now().Add(time.Hour * 72).Unix(),
 		}
@@ -73,8 +72,9 @@ func login(db *gorm.DB, privateKey *rsa.PrivateKey, validate *validator.Validate
 	}
 }
 
-func register(db *gorm.DB, redisClient *redis.Client, logger *zap.Logger, validate *validator.Validate) fiber.Handler {
+func register(db *gorm.DB, redisClient *redis.Client, logger *zap.Logger, validate *validator.Validate, cfg *config.Config) fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		fmt.Println("Register")
 		payload := &RegisterUserDTO{}
 
 		if err := c.BodyParser(&payload); err != nil {
@@ -90,8 +90,8 @@ func register(db *gorm.DB, redisClient *redis.Client, logger *zap.Logger, valida
 		}
 
 		u := query.Use(db).User
-		_, err := u.Where(u.Username.Eq(payload.Username)).Or(u.Email.Eq(payload.Email)).Find()
-		if err != nil {
+		_, err := u.Where(u.Username.Eq(payload.Username)).Or(u.Email.Eq(payload.Email)).First()
+		if err == nil {
 			return fiber.NewError(fiber.ErrConflict.Code, "Username of email already exists")
 		}
 
@@ -101,23 +101,25 @@ func register(db *gorm.DB, redisClient *redis.Client, logger *zap.Logger, valida
 		}
 
 		userModel := &models.User{
-			Username:     payload.Username,
-			Email:        payload.Email,
-			PasswordHash: string(hashedPassword),
+			Username:      payload.Username,
+			Email:         payload.Email,
+			PasswordHash:  string(hashedPassword),
+			EmailVerified: (cfg.Mode == config.TestMode),
 		}
 
 		if err := u.Create(userModel); err != nil {
 			return err
 		}
 
-		hasher := sha256.New()
-		hasher.Write([]byte(time.Now().String()))
-		verificationCode := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
+		if cfg.Mode != config.TestMode {
+			hasher := sha256.New()
+			hasher.Write([]byte(time.Now().String()))
+			verificationCode := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
 
-		logger.Info(fmt.Sprintf("Generated verificationCode '%s'", verificationCode))
+			logger.Info(fmt.Sprintf("Generated verificationCode '%s'", verificationCode))
 
-		redisClient.Set(verificationCode, userModel.ID, verificationCodeTTL)
-		// redisClient.Set(payload.Username, verificationCode, verificationCodeTTL)
+			redisClient.Set(verificationCode, userModel.ID, verificationCodeTTL)
+		}
 
 		return c.SendStatus(fiber.StatusOK)
 	}

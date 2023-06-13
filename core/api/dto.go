@@ -11,3 +11,7 @@ type RegisterUserDTO struct {
 	Password       string `validate:"required,min=3,max=40" json:"password"`
 	PasswordRepeat string `validate:"required,min=3,max=40" json:"password_repeat"`
 }
+
+type CreateProjectDTO struct {
+	Title string `validate:"required,min=3,max=32" json:"title"`
+}
