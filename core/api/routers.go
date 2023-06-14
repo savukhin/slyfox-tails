@@ -2,14 +2,12 @@ package api
 
 import (
 	"crypto/rsa"
-	"fmt"
 	"slyfox-tails/config"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/go-redis/redis"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -40,7 +38,12 @@ func SetupRouter(db *gorm.DB, redisClient *redis.Client, privateKey *rsa.Private
 			JWTAlg: jwtware.RS256,
 			Key:    privateKey.Public(),
 		},
+		// Claims: jwt.MapClaims{},
+		Claims: &UserClaims{},
 	})
+
+	// jwtMiddleware := JWTMiddleware(db, privateKey.Public())
+	// j.MiddlewareFunc()
 
 	// jwtPointMiddleware := jwtware.New(jwtware.Config{
 	// 	SigningKey: jwtware.SigningKey{
@@ -60,21 +63,15 @@ func SetupRouter(db *gorm.DB, redisClient *redis.Client, privateKey *rsa.Private
 
 	point.Post("/login", login(db, privateKey, validate))
 
-	v1.Get("/restricted", jwtMiddleware, func(c *fiber.Ctx) error {
-		fmt.Println(c.Locals("user"))
-		user := c.Locals("user").(*jwt.Token)
-		claims := user.Claims.(jwt.MapClaims)
-		name := claims["id"].(string)
-		return c.SendString("Welcome " + name)
-	})
+	v1.Get("/restricted", jwtMiddleware, restricted)
 
 	v1.Get("users/*", NotImplemented)
 	v1.Post("users/", NotImplemented)
 
-	v1.Get("project/:name", NotImplemented)
-	v1.Post("project/", jwtMiddleware, createProject(db))
-	v1.Patch("project/*", NotImplemented)
-	v1.Delete("project/*", NotImplemented)
+	v1.Get("project/:project_id", jwtMiddleware, getProject(db))
+	v1.Post("project/", jwtMiddleware, createProject(db, validate))
+	v1.Patch("project/:project_id", jwtMiddleware, updateProject(db, validate))
+	v1.Delete("project/:project_id", jwtMiddleware, deleteProject(db))
 
 	v1.Get("job/*", NotImplemented)
 	v1.Post("job/*", NotImplemented)

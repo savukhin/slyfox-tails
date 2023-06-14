@@ -3,7 +3,7 @@ package config
 const (
 	ReleaseMode string = "release"
 	DebugMode   string = "debug"
-	TestMode    string = "release"
+	TestMode    string = "test"
 )
 
 type Config struct {
@@ -19,6 +19,6 @@ type Config struct {
 	RedisDB       int    `envconfig:"REDIS_DB" default:"0"`
 	RedisPassword string `envconfig:"REDIS_PASSWORD" default:""`
 
-	Mode string `envconfig:"MODE" default:"release"`
+	Mode string `envconfig:"MODE" default:"debug"`
 	Port string `envconfig:"PORT" default:":8080"`
 }

@@ -60,29 +60,37 @@ services:
       REDIS_PORT: 6379
       # REDIS_PASSWORD: redisPassword123
       REDIS_DB: 0
+      MODE: test
       BACKEND_PORT: 8080
     ports:
       - "8080:8080"
     depends_on:
       - postgres
       - redis
+    # healthcheck:
+    #   test: "curl  --fail --silent http://localhost:8080 | grep UP || exit 1"
+    #   interval: 20s
+    #   timeout: 5s
+    #   retries: 5
+      # start_period: 40s
     # networks:
     #   - app-tier
     
-  testing:
-    build: .
-    restart: "no"
-    environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_DB=0
-      - API_HOST=http://backend:8080
-    depends_on:
-      - postgres
-      - redis
-      - backend
-    # networks:
-    #   - app-tier
+  # testing:
+  #   build: .
+  #   # restart: "no"
+  #   restart: on-failure
+  #   environment:
+  #     - REDIS_HOST=redis
+  #     - REDIS_PORT=6379
+  #     - REDIS_DB=0
+  #     - API_HOST=http://backend:8080
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #     - backend
+  #   # networks:
+  #   #   - app-tier
 
 
 volumes:

@@ -18,9 +18,33 @@ def test_project():
     
     assert response.status_code == 200
     
-    print(f"path is {os.path.join(API_HOST, 'user/login')}")
     response = requests.get(os.path.join(API_HOST, "user/login"), json={"username": username, "password": password})
     assert response.status_code == 200
+    token = response.json()["token"]
+
+    response = requests.get(os.path.join(API_HOST, "restricted"), headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 200
+    
+    project_title = "Pizzeria"
+    response = requests.post(os.path.join(API_HOST, "project"), json={"title": project_title}, headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 201
+    id = response.json()["id"]
+    
+    response = requests.get(os.path.join(API_HOST, "project", str(id)), headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 200
+    assert response.json()["title"] == project_title
+    
+    project_title = "Pizzeria updated"
+    response = requests.patch(os.path.join(API_HOST, "project", str(id)), json={"title": project_title}, headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 202
+    assert response.json()["title"] == project_title
+    
+    response = requests.delete(os.path.join(API_HOST, "project", str(id)), headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 200
+    
+    response = requests.get(os.path.join(API_HOST, "project", str(id)), headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 403
+
     
 if __name__ == "__main__":
     pytest.main(["-c", "full_cycle.py"])

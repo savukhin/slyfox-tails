@@ -52,10 +52,15 @@ func login(db *gorm.DB, privateKey *rsa.PrivateKey, validate *validator.Validate
 		}
 
 		// Create the Claims
-		claims := jwt.MapClaims{
-			"id":    user.ID,
-			"admin": true,
-			"exp":   time.Now().Add(time.Hour * 72).Unix(),
+		// claims := jwt.MapClaims{
+		// 	"user_id": user.ID,
+		// 	"admin":   true,
+		// 	"exp":     time.Now().Add(time.Hour * 72).Unix(),
+		// }
+
+		claims := UserClaims{
+			UserID:    user.ID,
+			ExpiresAt: time.Now().Add(time.Hour * 72),
 		}
 
 		// Create token
@@ -134,7 +139,7 @@ func verify(db *gorm.DB, redisClient *redis.Client, logger *zap.Logger) fiber.Ha
 			return c.SendStatus(fiber.StatusNotFound)
 		}
 
-		userID, err := strconv.Atoi(userIDStr)
+		userID, err := strconv.ParseUint(userIDStr, 10, 64)
 		if err != nil {
 			return c.SendStatus(fiber.StatusInternalServerError)
 		}
@@ -152,4 +157,18 @@ func verify(db *gorm.DB, redisClient *redis.Client, logger *zap.Logger) fiber.Ha
 
 		return c.SendStatus(fiber.StatusOK)
 	}
+}
+
+func restricted(c *fiber.Ctx) error {
+	user := c.Locals("user").(*jwt.Token)
+	// claims := user.Claims.(jwt.MapClaims)
+	claims := user.Claims.(*UserClaims)
+	// id := claims["id"].(float64)
+	// fmt.Println("id is", id)
+	// userid := claims["user_id"].(uint64)
+	// fmt.Println("userid is", userid)
+	fmt.Println("claim is", claims)
+	userid := claims.UserID
+	fmt.Println("userid is", userid)
+	return c.SendString("Welcome " + strconv.FormatUint(userid, 10))
 }
