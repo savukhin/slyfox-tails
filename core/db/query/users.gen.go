@@ -73,6 +73,18 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 		},
 	}
 
+	_user.Jobs = userHasManyJobs{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("Jobs", "models.Job"),
+	}
+
+	_user.Stages = userHasManyStages{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("Stages", "models.Stage"),
+	}
+
 	_user.fillFieldMap()
 
 	return _user
@@ -93,6 +105,10 @@ type user struct {
 	Points        userHasManyPoints
 
 	Projects userHasManyProjects
+
+	Jobs userHasManyJobs
+
+	Stages userHasManyStages
 
 	fieldMap map[string]field.Expr
 }
@@ -133,7 +149,7 @@ func (u *user) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (u *user) fillFieldMap() {
-	u.fieldMap = make(map[string]field.Expr, 10)
+	u.fieldMap = make(map[string]field.Expr, 12)
 	u.fieldMap["id"] = u.ID
 	u.fieldMap["username"] = u.Username
 	u.fieldMap["password_hash"] = u.PasswordHash
@@ -308,6 +324,148 @@ func (a userHasManyProjectsTx) Clear() error {
 }
 
 func (a userHasManyProjectsTx) Count() int64 {
+	return a.tx.Count()
+}
+
+type userHasManyJobs struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a userHasManyJobs) Where(conds ...field.Expr) *userHasManyJobs {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a userHasManyJobs) WithContext(ctx context.Context) *userHasManyJobs {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a userHasManyJobs) Session(session *gorm.Session) *userHasManyJobs {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a userHasManyJobs) Model(m *models.User) *userHasManyJobsTx {
+	return &userHasManyJobsTx{a.db.Model(m).Association(a.Name())}
+}
+
+type userHasManyJobsTx struct{ tx *gorm.Association }
+
+func (a userHasManyJobsTx) Find() (result []*models.Job, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a userHasManyJobsTx) Append(values ...*models.Job) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a userHasManyJobsTx) Replace(values ...*models.Job) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a userHasManyJobsTx) Delete(values ...*models.Job) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a userHasManyJobsTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a userHasManyJobsTx) Count() int64 {
+	return a.tx.Count()
+}
+
+type userHasManyStages struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a userHasManyStages) Where(conds ...field.Expr) *userHasManyStages {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a userHasManyStages) WithContext(ctx context.Context) *userHasManyStages {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a userHasManyStages) Session(session *gorm.Session) *userHasManyStages {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a userHasManyStages) Model(m *models.User) *userHasManyStagesTx {
+	return &userHasManyStagesTx{a.db.Model(m).Association(a.Name())}
+}
+
+type userHasManyStagesTx struct{ tx *gorm.Association }
+
+func (a userHasManyStagesTx) Find() (result []*models.Stage, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a userHasManyStagesTx) Append(values ...*models.Stage) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a userHasManyStagesTx) Replace(values ...*models.Stage) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a userHasManyStagesTx) Delete(values ...*models.Stage) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a userHasManyStagesTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a userHasManyStagesTx) Count() int64 {
 	return a.tx.Count()
 }
 

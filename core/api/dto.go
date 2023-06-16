@@ -15,3 +15,12 @@ type RegisterUserDTO struct {
 type CreateProjectDTO struct {
 	Title string `validate:"required,min=3,max=32" json:"title"`
 }
+
+type CreateJobDTO struct {
+	Title     string `validate:"required,min=3,max=32" json:"title"`
+	ProjectID uint64 `validate:"required,number" json:"project_id"`
+}
+
+type UpdateJobDTO struct {
+	Title string `validate:"required,min=3,max=32" json:"title"`
+}

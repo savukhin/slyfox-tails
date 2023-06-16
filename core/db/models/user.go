@@ -8,6 +8,8 @@ type User struct {
 	EmailVerified bool      `gorm:"column:email_verified;type:bool;not null;default: false" json:"email_verified"`
 	Points        []Point   `gorm:"foreignKey:CreatorID" json:"points"`
 	Projects      []Project `gorm:"foreignKey:CreatorID" json:"projects"`
+	Jobs          []Job     `gorm:"foreignKey:CreatorID" json:"jobs"`
+	Stages        []Stage   `gorm:"foreignKey:CreatorID" json:"stages"`
 
 	TimingAt
 }

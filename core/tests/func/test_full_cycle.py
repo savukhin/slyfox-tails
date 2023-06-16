@@ -25,25 +25,67 @@ def test_project():
     response = requests.get(os.path.join(API_HOST, "restricted"), headers={"Authorization": "Bearer " + token})
     assert response.status_code == 200
     
+    # PROJECT
+    
     project_title = "Pizzeria"
     response = requests.post(os.path.join(API_HOST, "project"), json={"title": project_title}, headers={"Authorization": "Bearer " + token})
     assert response.status_code == 201
-    id = response.json()["id"]
+    project_id = response.json()["id"]
     
-    response = requests.get(os.path.join(API_HOST, "project", str(id)), headers={"Authorization": "Bearer " + token})
+    response = requests.get(os.path.join(API_HOST, "project", str(project_id)), headers={"Authorization": "Bearer " + token})
     assert response.status_code == 200
     assert response.json()["title"] == project_title
     
     project_title = "Pizzeria updated"
-    response = requests.patch(os.path.join(API_HOST, "project", str(id)), json={"title": project_title}, headers={"Authorization": "Bearer " + token})
+    response = requests.patch(os.path.join(API_HOST, "project", str(project_id)), json={"title": project_title}, headers={"Authorization": "Bearer " + token})
     assert response.status_code == 202
     assert response.json()["title"] == project_title
     
-    response = requests.delete(os.path.join(API_HOST, "project", str(id)), headers={"Authorization": "Bearer " + token})
+    response = requests.delete(os.path.join(API_HOST, "project", str(project_id)), headers={"Authorization": "Bearer " + token})
     assert response.status_code == 200
     
-    response = requests.get(os.path.join(API_HOST, "project", str(id)), headers={"Authorization": "Bearer " + token})
+    response = requests.get(os.path.join(API_HOST, "project", str(project_id)), headers={"Authorization": "Bearer " + token})
     assert response.status_code == 403
+    
+    project_title = "Pizzeria"
+    response = requests.post(os.path.join(API_HOST, "project"), json={"title": project_title}, headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 201
+    project_id = response.json()["id"]
+    
+    # JOB
+    
+    job_title = "Pepperoni"
+    response = requests.post(os.path.join(API_HOST, "job"), json={"title": job_title, "project_id": project_id}, headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 201
+    job_id = response.json()["id"]
+    
+    response = requests.get(os.path.join(API_HOST, "job", str(job_id)), headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 200
+    assert response.json()["title"] == job_title
+    
+    job_title = "Pepperoni Mega"
+    response = requests.patch(os.path.join(API_HOST, "job", str(job_id)), json={"title": job_title}, headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 202
+    assert response.json()["title"] == job_title
+    
+    response = requests.delete(os.path.join(API_HOST, "job", str(job_id)), headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 200
+    
+    response = requests.get(os.path.join(API_HOST, "job", str(job_id)), headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 403
+    
+    job_title = "Margarita"
+    response = requests.post(os.path.join(API_HOST, "job"), json={"title": job_title, "project_id": project_id}, headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 201
+    job_id = response.json()["id"]
+    
+    # STAGE
+    
+    # STAGE EXECUTION
+    
+    # POINT
+    
+    # DELETIONS
 
     
 if __name__ == "__main__":
