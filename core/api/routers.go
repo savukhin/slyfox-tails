@@ -78,15 +78,15 @@ func SetupRouter(db *gorm.DB, redisClient *redis.Client, privateKey *rsa.Private
 	v1.Patch("job/:job_id", jwtMiddleware, updateJob(db, validate))
 	v1.Delete("job/:job_id", jwtMiddleware, deleteJob(db))
 
-	v1.Get("point/*", NotImplemented)
-	v1.Post("point/*", NotImplemented)
-	v1.Patch("point/*", NotImplemented)
-	v1.Delete("point/*", NotImplemented)
+	v1.Get("point/:point_id", jwtMiddleware, getPoint(db))
+	v1.Post("point", jwtMiddleware, createPoint(db, validate))
+	v1.Patch("point/:point_id", jwtMiddleware, updatePoint(db, validate))
+	v1.Delete("point/:point_id", jwtMiddleware, deletePoint(db))
 
-	v1.Get("stage/*", NotImplemented)
-	v1.Post("stage/*", NotImplemented)
-	v1.Patch("stage/*", NotImplemented)
-	v1.Delete("stage/*", NotImplemented)
+	v1.Get("stage/:stage_id", jwtMiddleware, getStage(db))
+	v1.Post("stage/", jwtMiddleware, createStage(db, validate))
+	v1.Patch("stage/:stage_id", jwtMiddleware, updateStage(db, validate))
+	v1.Delete("stage/:stage_id", jwtMiddleware, deleteStage(db))
 
 	return app
 }

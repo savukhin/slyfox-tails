@@ -31,6 +31,7 @@ func newStage(db *gorm.DB, opts ...gen.DOOption) stage {
 	_stage.Title = field.NewString(tableName, "title")
 	_stage.CreatorID = field.NewUint64(tableName, "creator_id")
 	_stage.JobID = field.NewUint64(tableName, "job_id")
+	_stage.StartedAt = field.NewTime(tableName, "started_at")
 	_stage.CreatedAt = field.NewTime(tableName, "created_at")
 	_stage.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_stage.DeletedAt = field.NewField(tableName, "deleted_at")
@@ -66,6 +67,7 @@ type stage struct {
 	Title     field.String
 	CreatorID field.Uint64
 	JobID     field.Uint64
+	StartedAt field.Time
 	CreatedAt field.Time
 	UpdatedAt field.Time
 	DeletedAt field.Field
@@ -90,6 +92,7 @@ func (s *stage) updateTableName(table string) *stage {
 	s.Title = field.NewString(table, "title")
 	s.CreatorID = field.NewUint64(table, "creator_id")
 	s.JobID = field.NewUint64(table, "job_id")
+	s.StartedAt = field.NewTime(table, "started_at")
 	s.CreatedAt = field.NewTime(table, "created_at")
 	s.UpdatedAt = field.NewTime(table, "updated_at")
 	s.DeletedAt = field.NewField(table, "deleted_at")
@@ -109,11 +112,12 @@ func (s *stage) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (s *stage) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 8)
+	s.fieldMap = make(map[string]field.Expr, 9)
 	s.fieldMap["id"] = s.ID
 	s.fieldMap["title"] = s.Title
 	s.fieldMap["creator_id"] = s.CreatorID
 	s.fieldMap["job_id"] = s.JobID
+	s.fieldMap["started_at"] = s.StartedAt
 	s.fieldMap["created_at"] = s.CreatedAt
 	s.fieldMap["updated_at"] = s.UpdatedAt
 	s.fieldMap["deleted_at"] = s.DeletedAt

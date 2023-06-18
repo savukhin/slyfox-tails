@@ -24,3 +24,23 @@ type CreateJobDTO struct {
 type UpdateJobDTO struct {
 	Title string `validate:"required,min=3,max=32" json:"title"`
 }
+
+type CreateStageDTO struct {
+	Title string `validate:"required,min=3,max=32" json:"title"`
+	JobID uint64 `validate:"required,number" json:"job_id"`
+}
+
+type UpdatedStageDTO struct {
+	Title       string `validate:"min=3,max=32" json:"title"`
+	StartedAtMs uint64 `validate:"numeric" json:"started_at_ms"`
+}
+
+type CreatePointDTO struct {
+	Title  string   `validate:"required,min=3,max=32" json:"title"`
+	Stages []uint64 `validate:"" json:"stage_ids,omitempty"`
+}
+
+type UpdatePointDTO struct {
+	Title  string   `validate:"min=3,max=32" json:"title,omitempty"`
+	Stages []uint64 `validate:"" json:"stage_ids,omitempty"`
+}

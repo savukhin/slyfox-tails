@@ -81,9 +81,64 @@ def test_project():
     
     # STAGE
     
-    # STAGE EXECUTION
+    stage_title = "Baking"
+    response = requests.post(os.path.join(API_HOST, "stage"), json={"title": stage_title, "job_id": job_id}, headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 201
+    stage_id = response.json()["id"]
+    
+    response = requests.get(os.path.join(API_HOST, "stage", str(stage_id)), headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 200
+    assert response.json()["title"] == stage_title
+    
+    stage_title = "Baking X"
+    response = requests.patch(os.path.join(API_HOST, "stage", str(stage_id)), json={"title": stage_title}, headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 202
+    assert response.json()["title"] == stage_title
+    
+    response = requests.delete(os.path.join(API_HOST, "stage", str(stage_id)), headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 200
+    
+    response = requests.get(os.path.join(API_HOST, "stage", str(stage_id)), headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 403
+    
+    stage_title = "Baking"
+    response = requests.post(os.path.join(API_HOST, "stage"), json={"title": stage_title, "job_id": job_id}, headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 201
+    stage1_id = response.json()["id"]
+    
+    stage2_title = "Delivery"
+    response = requests.post(os.path.join(API_HOST, "stage"), json={"title": stage2_title, "job_id": job_id}, headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 201
+    stage2_id = response.json()["id"]
     
     # POINT
+    
+    point_title = "Baking Point"
+    response = requests.post(os.path.join(API_HOST, "point"), 
+                             json={"title": point_title, "stage_ids": [stage1_id, stage2_id]},
+                             headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 201
+    point_id = response.json()["id"]
+    
+    response = requests.get(os.path.join(API_HOST, "point", str(point_id)), headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 200
+    assert response.json()["title"] == point_title
+    assert response.json()["stages"][0]["id"] == stage1_id
+    assert response.json()["stages"][1]["id"] == stage2_id
+    
+    point_title = "Baking Point 2"
+    response = requests.patch(os.path.join(API_HOST, "point", str(point_id)), json={"title": point_title}, headers={"Authorization": "Bearer " + token})
+    print(response.json())
+    assert response.status_code == 202
+    assert response.json()["title"] == point_title
+    assert response.json()["stages"][0]["id"] == stage1_id
+    assert response.json()["stages"][1]["id"] == stage2_id
+    
+    response = requests.delete(os.path.join(API_HOST, "point", str(point_id)), headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 200
+    
+    response = requests.get(os.path.join(API_HOST, "point", str(point_id)), headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 403
     
     # DELETIONS
 

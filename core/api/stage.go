@@ -4,6 +4,7 @@ import (
 	"slyfox-tails/db/models"
 	"slyfox-tails/db/query"
 	"strconv"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -11,9 +12,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func createJob(db *gorm.DB, validate *validator.Validate) fiber.Handler {
+func createStage(db *gorm.DB, validate *validator.Validate) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		payload := &CreateJobDTO{}
+		payload := &CreateStageDTO{}
 
 		if err := c.BodyParser(payload); err != nil {
 			return c.SendStatus(fiber.StatusBadRequest)
@@ -31,25 +32,25 @@ func createJob(db *gorm.DB, validate *validator.Validate) fiber.Handler {
 
 		userID := claims.UserID
 
-		p := query.Use(db).Project
-		proj, err := p.Where(p.CreatorID.Eq(userID), p.ID.Eq(payload.ProjectID)).First()
+		j := query.Use(db).Job
+		job, err := j.Where(j.CreatorID.Eq(userID), j.ID.Eq(payload.JobID)).First()
 
 		if err != nil {
 			return fiber.ErrForbidden
 		}
 
-		job := &models.Job{Title: payload.Title, CreatorID: userID}
-		err = p.Jobs.Model(proj).Append(job)
+		stage := &models.Stage{Title: payload.Title, CreatorID: userID}
+		err = j.Stages.Model(job).Append(stage)
 		if err != nil {
 			return c.SendStatus(fiber.StatusInternalServerError)
 		}
 
 		c.Status(fiber.StatusCreated)
-		return c.JSON(map[string]uint64{"id": job.ID})
+		return c.JSON(map[string]uint64{"id": stage.ID})
 	}
 }
 
-func getJob(db *gorm.DB) fiber.Handler {
+func getStage(db *gorm.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		userLocal := c.Locals("user").(*jwt.Token)
 		claims, ok := userLocal.Claims.(*UserClaims)
@@ -57,25 +58,25 @@ func getJob(db *gorm.DB) fiber.Handler {
 			return fiber.ErrInternalServerError
 		}
 		userID := claims.UserID
-		jobID, err := strconv.ParseUint(c.Params("job_id"), 10, 64)
+		stageID, err := strconv.ParseUint(c.Params("stage_id"), 10, 64)
 		if err != nil {
 			return fiber.ErrBadRequest
 		}
 
-		j := query.Use(db).Job
-		job, err := j.Where(j.CreatorID.Eq(userID), j.ID.Eq(jobID)).First()
+		st := query.Use(db).Stage
+		stage, err := st.Where(st.CreatorID.Eq(userID), st.ID.Eq(stageID)).First()
 
 		if err != nil {
 			return fiber.ErrForbidden
 		}
 
-		return c.JSON(job)
+		return c.JSON(stage)
 	}
 }
 
-func updateJob(db *gorm.DB, validate *validator.Validate) fiber.Handler {
+func updateStage(db *gorm.DB, validate *validator.Validate) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		payload := &UpdateJobDTO{}
+		payload := &UpdatedStageDTO{}
 
 		if err := c.BodyParser(payload); err != nil {
 			return c.SendStatus(fiber.StatusBadRequest)
@@ -92,36 +93,37 @@ func updateJob(db *gorm.DB, validate *validator.Validate) fiber.Handler {
 		}
 		userID := claims.UserID
 
-		jobID, err := strconv.ParseUint(c.Params("job_id"), 10, 64)
+		stageID, err := strconv.ParseUint(c.Params("stage_id"), 10, 64)
 		if err != nil {
 			return fiber.ErrBadRequest
 		}
 
-		j := query.Use(db).Job
-		job, err := j.Where(j.ID.Eq(jobID), j.CreatorID.Eq(userID)).First()
+		s := query.Use(db).Stage
+		stage, err := s.Where(s.ID.Eq(stageID), s.CreatorID.Eq(userID)).First()
 
 		if err != nil {
 			return fiber.ErrForbidden
 		}
 
-		job.Title = payload.Title
-		err = j.Save(job)
+		stage.Title = payload.Title
+		stage.StartedAt = time.UnixMilli(int64(payload.StartedAtMs))
+		err = s.Save(stage)
 
 		if err != nil {
 			return fiber.ErrInternalServerError
 		}
 
-		job, err = j.Where(j.CreatorID.Eq(userID), j.ID.Eq(jobID)).First()
+		stage, err = s.Where(s.CreatorID.Eq(userID), s.ID.Eq(stageID)).First()
 		if err != nil {
 			return fiber.ErrInternalServerError
 		}
 
 		c.Status(fiber.StatusAccepted)
-		return c.JSON(job)
+		return c.JSON(stage)
 	}
 }
 
-func deleteJob(db *gorm.DB) fiber.Handler {
+func deleteStage(db *gorm.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		userLocal := c.Locals("user").(*jwt.Token)
 		claims, ok := userLocal.Claims.(*UserClaims)
@@ -130,13 +132,13 @@ func deleteJob(db *gorm.DB) fiber.Handler {
 		}
 		userID := claims.UserID
 
-		jobID, err := strconv.ParseUint(c.Params("job_id"), 10, 64)
+		stageID, err := strconv.ParseUint(c.Params("stage_id"), 10, 64)
 		if err != nil {
 			return fiber.ErrBadRequest
 		}
 
-		p := query.Use(db).Job
-		res, err := p.Where(p.CreatorID.Eq(userID), p.ID.Eq(jobID)).Delete()
+		s := query.Use(db).Stage
+		res, err := s.Where(s.CreatorID.Eq(userID), s.ID.Eq(stageID)).Delete()
 		if err != nil {
 			return fiber.ErrInternalServerError
 		}
