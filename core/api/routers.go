@@ -59,11 +59,7 @@ func SetupRouter(db *gorm.DB, redisClient *redis.Client, privateKey *rsa.Private
 	user.Post("/register", register(db, redisClient, logger, validate, cfg))
 	user.Get("/email-verify/:code", verify(db, redisClient, logger))
 
-	point := v1.Group("/point")
-
-	point.Post("/login", login(db, privateKey, validate))
-
-	v1.Get("/restricted", jwtMiddleware, restricted)
+	v1.Get("/restricted", JWTChooser(db, privateKey.Public(), restrictedUser, restrictedPoint))
 
 	v1.Get("users/*", NotImplemented)
 	v1.Post("users/", NotImplemented)
@@ -78,6 +74,7 @@ func SetupRouter(db *gorm.DB, redisClient *redis.Client, privateKey *rsa.Private
 	v1.Patch("job/:job_id", jwtMiddleware, updateJob(db, validate))
 	v1.Delete("job/:job_id", jwtMiddleware, deleteJob(db))
 
+	v1.Get("point/login", loginPoint(db, privateKey, *validate))
 	v1.Get("point/:point_id", jwtMiddleware, getPoint(db))
 	v1.Post("point", jwtMiddleware, createPoint(db, validate))
 	v1.Patch("point/:point_id", jwtMiddleware, updatePoint(db, validate))

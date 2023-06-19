@@ -159,7 +159,7 @@ func verify(db *gorm.DB, redisClient *redis.Client, logger *zap.Logger) fiber.Ha
 	}
 }
 
-func restricted(c *fiber.Ctx) error {
+func restrictedUser(c *fiber.Ctx) error {
 	user := c.Locals("user").(*jwt.Token)
 	// claims := user.Claims.(jwt.MapClaims)
 	claims := user.Claims.(*UserClaims)

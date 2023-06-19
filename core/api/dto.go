@@ -1,7 +1,7 @@
 package api
 
 type LoginUserDTO struct {
-	Username string `validate:"required" json:"username"`
+	Username string `validate:"required,excludesall=0x20" json:"username"`
 	Password string `validate:"required" json:"password"`
 }
 
@@ -36,11 +36,19 @@ type UpdatedStageDTO struct {
 }
 
 type CreatePointDTO struct {
-	Title  string   `validate:"required,min=3,max=32" json:"title"`
-	Stages []uint64 `validate:"" json:"stage_ids,omitempty"`
+	Login          string   `validate:"required,min=3,max=32,excludesall=0x20" json:"login"`
+	Title          string   `validate:"required,min=3,max=32" json:"title"`
+	Password       string   `validate:"required" json:"password"`
+	PasswordRepeat string   `validate:"required" json:"password_repeat"`
+	Stages         []uint64 `validate:"" json:"stage_ids,omitempty"`
 }
 
 type UpdatePointDTO struct {
 	Title  string   `validate:"min=3,max=32" json:"title,omitempty"`
 	Stages []uint64 `validate:"" json:"stage_ids,omitempty"`
+}
+
+type LoginPointDTO struct {
+	Username string `validate:"required" json:"username"`
+	Password string `validate:"required" json:"password"`
 }

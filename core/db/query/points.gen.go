@@ -28,6 +28,8 @@ func newPoint(db *gorm.DB, opts ...gen.DOOption) point {
 	tableName := _point.pointDo.TableName()
 	_point.ALL = field.NewAsterisk(tableName)
 	_point.ID = field.NewUint64(tableName, "id")
+	_point.PasswordHash = field.NewString(tableName, "password_hash")
+	_point.Login = field.NewString(tableName, "login")
 	_point.Title = field.NewString(tableName, "title")
 	_point.CreatorID = field.NewUint64(tableName, "creator_id")
 	_point.CreatedAt = field.NewTime(tableName, "created_at")
@@ -60,14 +62,16 @@ func newPoint(db *gorm.DB, opts ...gen.DOOption) point {
 type point struct {
 	pointDo
 
-	ALL       field.Asterisk
-	ID        field.Uint64
-	Title     field.String
-	CreatorID field.Uint64
-	CreatedAt field.Time
-	UpdatedAt field.Time
-	DeletedAt field.Field
-	Stages    pointManyToManyStages
+	ALL          field.Asterisk
+	ID           field.Uint64
+	PasswordHash field.String
+	Login        field.String
+	Title        field.String
+	CreatorID    field.Uint64
+	CreatedAt    field.Time
+	UpdatedAt    field.Time
+	DeletedAt    field.Field
+	Stages       pointManyToManyStages
 
 	fieldMap map[string]field.Expr
 }
@@ -85,6 +89,8 @@ func (p point) As(alias string) *point {
 func (p *point) updateTableName(table string) *point {
 	p.ALL = field.NewAsterisk(table)
 	p.ID = field.NewUint64(table, "id")
+	p.PasswordHash = field.NewString(table, "password_hash")
+	p.Login = field.NewString(table, "login")
 	p.Title = field.NewString(table, "title")
 	p.CreatorID = field.NewUint64(table, "creator_id")
 	p.CreatedAt = field.NewTime(table, "created_at")
@@ -106,8 +112,10 @@ func (p *point) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (p *point) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 7)
+	p.fieldMap = make(map[string]field.Expr, 9)
 	p.fieldMap["id"] = p.ID
+	p.fieldMap["password_hash"] = p.PasswordHash
+	p.fieldMap["login"] = p.Login
 	p.fieldMap["title"] = p.Title
 	p.fieldMap["creator_id"] = p.CreatorID
 	p.fieldMap["created_at"] = p.CreatedAt

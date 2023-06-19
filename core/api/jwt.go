@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,71 +14,80 @@ type UserClaims struct {
 	jwt.RegisteredClaims
 }
 
-// SigningKey holds information about the recognized cryptographic keys used to sign JWTs by this program.
-type SigningKey struct {
-	// JWTAlg is the algorithm used to sign JWTs. If this value is a non-empty string, this will be checked against the
-	// "alg" value in the JWT header.
-	//
-	// https://www.rfc-editor.org/rfc/rfc7518#section-3.1
-	JWTAlg string
-	// Key is the cryptographic key used to sign JWTs. For supported types, please see
-	// https://github.com/golang-jwt/jwt.
-	Key interface{}
+type PointClaims struct {
+	PointID   uint64    `json:"point_id,omitempty"`
+	ExpiresAt time.Time `json:"exp,omitempty"`
+	jwt.RegisteredClaims
 }
 
-func signingKeyFunc(key SigningKey) jwt.Keyfunc {
-	return func(token *jwt.Token) (interface{}, error) {
-		if key.JWTAlg != "" {
-			alg, ok := token.Header["alg"].(string)
-			if !ok {
-				return nil, fmt.Errorf("unexpected jwt signing method: expected: %q: got: missing or unexpected JSON type", key.JWTAlg)
-			}
-			if alg != key.JWTAlg {
-				return nil, fmt.Errorf("unexpected jwt signing method: expected: %q: got: %q", key.JWTAlg, alg)
-			}
-		}
-		return key.Key, nil
+func checkUserToken(tokenValue string, key interface{}) (*jwt.Token, error) {
+	userClaims := &UserClaims{}
+	userToken, err := jwt.ParseWithClaims(tokenValue, userClaims, func(token *jwt.Token) (interface{}, error) {
+		return key, nil
+	})
+
+	if err != nil {
+		return nil, fiber.ErrUnauthorized
 	}
+
+	// check for time expired
+	diff := time.Until(userClaims.ExpiresAt)
+	if diff < 0 {
+		return nil, fiber.ErrForbidden
+	}
+
+	if !userToken.Valid {
+		return nil, fiber.ErrForbidden
+	}
+
+	return userToken, nil
 }
 
-func JWTMiddleware(db *gorm.DB, key interface{}) fiber.Handler {
+func checkPointToken(tokenValue string, key interface{}) (*jwt.Token, error) {
+	pointClaims := &PointClaims{}
+	pointToken, err := jwt.ParseWithClaims(tokenValue, pointClaims, func(token *jwt.Token) (interface{}, error) {
+		return key, nil
+	})
+
+	if err != nil {
+		return nil, fiber.ErrUnauthorized
+	}
+
+	// check for time expired
+	diff := time.Until(pointClaims.ExpiresAt)
+	if diff < 0 {
+		return nil, fiber.ErrForbidden
+	}
+
+	if !pointToken.Valid {
+		return nil, fiber.ErrForbidden
+	}
+
+	return pointToken, nil
+}
+
+func JWTChooser(db *gorm.DB, key interface{}, userHandler fiber.Handler, pointHandler fiber.Handler) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		tokenHeader := c.GetReqHeaders()["Authorization"]
-		fmt.Println("Header is ", tokenHeader)
 
 		if len(tokenHeader) < 8 || tokenHeader[:7] != "Bearer " {
 			return fiber.ErrBadRequest
 		}
 
 		tokenHeader = tokenHeader[7:]
-		fmt.Println("Header after filter is ", tokenHeader)
 
-		claims := &UserClaims{}
-		tokenValue := tokenHeader
-		// jwt.SigningMethodRS256
-		token, err := jwt.ParseWithClaims(tokenValue, claims, func(token *jwt.Token) (interface{}, error) {
-			return key, nil
-		})
-
-		if err != nil {
-			fmt.Println("userclaims err", err)
-			return fiber.ErrUnauthorized
-		}
-		fmt.Println("token", token)
-
-		// check for time expired
-		diff := time.Until(claims.ExpiresAt)
-		if diff < 0 {
-			fmt.Println("expired diff < 0", diff)
-			return fiber.ErrForbidden
+		userToken, err := checkUserToken(tokenHeader, key)
+		if err == nil {
+			c.Locals("user", userToken)
+			return userHandler(c)
 		}
 
-		if !token.Valid {
-			fmt.Println("token not valid")
-			return fiber.ErrForbidden
+		pointToken, err := checkPointToken(tokenHeader, key)
+		if err == nil {
+			c.Locals("point", pointToken)
+			return pointHandler(c)
 		}
 
-		c.Locals("user", token)
-		return c.Next()
+		return fiber.ErrForbidden
 	}
 }

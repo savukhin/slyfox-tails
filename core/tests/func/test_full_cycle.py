@@ -113,12 +113,21 @@ def test_project():
     
     # POINT
     
+    point_login = "Baking"
     point_title = "Baking Point"
+    point_password = "mycoolpassword"
     response = requests.post(os.path.join(API_HOST, "point"), 
-                             json={"title": point_title, "stage_ids": [stage1_id, stage2_id]},
+                             json={"title": point_title, "stage_ids": [stage1_id, stage2_id], "login": point_login,
+                                   "password": point_password, "password_repeat": point_password},
                              headers={"Authorization": "Bearer " + token})
     assert response.status_code == 201
     point_id = response.json()["id"]
+    
+    response = requests.post(os.path.join(API_HOST, "point"), 
+                             json={"title": point_title, "stage_ids": [stage1_id, stage2_id], "login": point_login,
+                                   "password": point_password, "password_repeat": point_password},
+                             headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 409
     
     response = requests.get(os.path.join(API_HOST, "point", str(point_id)), headers={"Authorization": "Bearer " + token})
     assert response.status_code == 200
@@ -139,6 +148,21 @@ def test_project():
     
     response = requests.get(os.path.join(API_HOST, "point", str(point_id)), headers={"Authorization": "Bearer " + token})
     assert response.status_code == 403
+    
+    response = requests.post(os.path.join(API_HOST, "point"), 
+                             json={"title": point_title, "stage_ids": [stage1_id, stage2_id], "login": point_login,
+                                   "password": point_password, "password_repeat": point_password},
+                             headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 201
+    point_id = response.json()["id"]
+    
+    response = requests.get(os.path.join(API_HOST, "point", "login"), json={"username": point_login + "@" + username, "password": point_password})
+    print(response.content)
+    assert response.status_code == 200
+    point_token = response.json()["token"]
+    
+    response = requests.get(os.path.join(API_HOST, "restricted"), headers={"Authorization": "Bearer " + point_token})
+    assert response.status_code == 200
     
     # DELETIONS
 
